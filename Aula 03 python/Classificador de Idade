@@ -1,0 +1,39 @@
+import tkinter as tk
+
+def classificar_idade():
+    try:
+        idade = int(entry_idade.get())
+        if idade < 0:
+            resultado.config(text="Idade inválida")
+        elif idade <= 12:
+            categoria = "Criança"
+        elif idade <= 17:
+            categoria = "Adolescente"
+        elif idade <= 59:
+            categoria = "Adulto"
+        else:
+            categoria = "Idoso"
+        resultado.config(text=f"Idade: {idade}\nCategoria: {categoria}")
+    except ValueError:
+        resultado.config(text="Digite um número válido")
+
+# Janela
+janela = tk.Tk()
+janela.title("Classificador de Idade")
+janela.geometry("400x300")  # tamanho maior
+janela.minsize(400, 300)    # tamanho mínimo para não ficar pequeno
+
+# Entrada de idade
+tk.Label(janela, text="Digite sua idade", font=("Arial", 12)).pack(pady=10)
+entry_idade = tk.Entry(janela, font=("Arial", 12))
+entry_idade.pack(pady=5)
+entry_idade.insert(0, "25")  # valor inicial opcional
+
+# Botão
+tk.Button(janela, text="Classificar", font=("Arial", 12), command=classificar_idade).pack(pady=15)
+
+# Resultado
+resultado = tk.Label(janela, text="", justify="left", font=("Arial", 12))
+resultado.pack(pady=10)
+
+janela.mainloop()
