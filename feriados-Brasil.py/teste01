@@ -1,0 +1,3 @@
+git add app.py
+git commit -m "App Streamlit completo com datas móveis"
+git push origin main
