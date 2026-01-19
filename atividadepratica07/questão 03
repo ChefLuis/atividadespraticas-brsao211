@@ -1,0 +1,139 @@
+import tkinter as tk
+from tkinter import filedialog, messagebox, scrolledtext, ttk
+import pandas as pd
+import os
+import win32com.client
+from pptx import Presentation
+import docx
+import rarfile
+
+# ---------------------- FUNÇÕES DE LEITURA ----------------------
+def ler_word(filepath):
+    ext = os.path.splitext(filepath)[1].lower()
+    texto = ""
+    try:
+        if ext == '.docx':
+            doc = docx.Document(filepath)
+            for para in doc.paragraphs:
+                texto += para.text + '\n'
+        elif ext == '.doc':
+            word = win32com.client.Dispatch("Word.Application")
+            word.Visible = False
+            doc = word.Documents.Open(filepath)
+            texto = doc.Content.Text
+            doc.Close()
+            word.Quit()
+        else:
+            texto = f"Formato {ext} não suportado para Word."
+    except Exception as e:
+        texto = f"Erro ao ler Word: {e}"
+    return texto
+
+def ler_excel(filepath):
+    ext = os.path.splitext(filepath)[1].lower()
+    texto = ""
+    try:
+        if ext in ['.xls', '.xlsx']:
+            xls = pd.ExcelFile(filepath)
+            for sheet_name in xls.sheet_names:
+                texto += f"=== Aba: {sheet_name} ===\n"
+                df = pd.read_excel(xls, sheet_name=sheet_name)
+                for idx, row in df.iterrows():
+                    texto += '\t'.join([str(cell) for cell in row]) + '\n'
+                texto += '\n'
+        else:
+            texto = f"Formato {ext} não suportado para Excel."
+    except Exception as e:
+        texto = f"Erro ao ler Excel: {e}"
+    return texto
+
+def ler_pptx(filepath):
+    texto = ""
+    try:
+        prs = Presentation(filepath)
+        for i, slide in enumerate(prs.slides):
+            texto += f"=== Slide {i+1} ===\n"
+            for shape in slide.shapes:
+                if hasattr(shape, "text"):
+                    texto += shape.text + '\n'
+            texto += '\n'
+    except Exception as e:
+        texto = f"Erro ao ler PowerPoint: {e}"
+    return texto
+
+def ler_csv(filepath):
+    texto = ""
+    try:
+        df = pd.read_csv(filepath)
+        for idx, row in df.iterrows():
+            texto += '\t'.join([str(cell) for cell in row]) + '\n'
+    except Exception as e:
+        texto = f"Erro ao ler CSV: {e}"
+    return texto
+
+def ler_rar(filepath):
+    texto = ""
+    try:
+        with rarfile.RarFile(filepath) as rf:
+            texto += f"Arquivos dentro do RAR '{os.path.basename(filepath)}':\n"
+            for f in rf.namelist():
+                texto += f"- {f}\n"
+    except Exception as e:
+        texto = f"Erro ao abrir RAR: {e}"
+    return texto
+
+# ---------------------- FUNÇÃO PARA ABRIR ARQUIVO ----------------------
+def abrir_arquivo(tipo):
+    filepath = filedialog.askopenfilename(title=f"Escolha um arquivo {tipo}")
+    if not filepath:
+        return
+
+    text_area.config(state=tk.NORMAL)
+    text_area.delete('1.0', tk.END)
+
+    ext = os.path.splitext(filepath)[1].lower()
+    if tipo == "Word":
+        texto = ler_word(filepath)
+    elif tipo == "Excel":
+        texto = ler_excel(filepath)
+    elif tipo == "PowerPoint":
+        texto = ler_pptx(filepath)
+    elif tipo == "CSV":
+        texto = ler_csv(filepath)
+    elif tipo == "RAR":
+        texto = ler_rar(filepath)
+    else:
+        texto = f"Formato {ext} não suportado."
+
+    # Exibir texto
+    text_area.insert(tk.END, texto)
+    text_area.config(state=tk.DISABLED)
+
+# ---------------------- INTERFACE GRÁFICA ----------------------
+root = tk.Tk()
+root.title("Leitor de Arquivos Office e RAR")
+root.geometry("900x600")
+root.configure(bg="#2b2b2b")  # fundo escuro
+
+# Estilo ttk
+style = ttk.Style()
+style.theme_use("clam")
+style.configure("TButton", font=("Arial", 12), padding=6)
+
+# Frame de botões
+frame_btn = tk.Frame(root, bg="#2b2b2b")
+frame_btn.pack(pady=10)
+
+# Botões separados
+ttk.Button(frame_btn, text="Abrir Word", command=lambda: abrir_arquivo("Word")).pack(side=tk.LEFT, padx=5)
+ttk.Button(frame_btn, text="Abrir Excel", command=lambda: abrir_arquivo("Excel")).pack(side=tk.LEFT, padx=5)
+ttk.Button(frame_btn, text="Abrir PowerPoint", command=lambda: abrir_arquivo("PowerPoint")).pack(side=tk.LEFT, padx=5)
+ttk.Button(frame_btn, text="Abrir CSV", command=lambda: abrir_arquivo("CSV")).pack(side=tk.LEFT, padx=5)
+ttk.Button(frame_btn, text="Abrir RAR", command=lambda: abrir_arquivo("RAR")).pack(side=tk.LEFT, padx=5)
+
+# Área de texto com scroll
+text_area = scrolledtext.ScrolledText(root, wrap=tk.WORD, width=110, height=35, font=("Consolas", 11), bg="#1e1e1e", fg="#dcdcdc")
+text_area.pack(padx=10, pady=10)
+text_area.config(state=tk.DISABLED)
+
+root.mainloop()

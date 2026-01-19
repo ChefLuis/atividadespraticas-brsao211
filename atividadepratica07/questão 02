@@ -1,0 +1,52 @@
+import tkinter as tk
+from tkinter import filedialog, messagebox
+
+# Dados do programa
+pessoas = [
+    ("Ana", 25, "São Paulo"),
+    ("Bruno", 30, "Rio de Janeiro"),
+    ("Carla", 22, "Belo Horizonte"),
+    ("Diego", 28, "Curitiba")
+]
+
+def salvar_arquivo():
+    caminho = filedialog.asksaveasfilename(
+        defaultextension=".txt",
+        filetypes=[("Arquivo de texto", "*.txt")]
+    )
+    if not caminho:
+        return
+    try:
+        with open(caminho, "w", encoding="utf-8") as arquivo:
+            arquivo.write(f"{'Nome':<15}{'Idade':<10}{'Cidade':<20}\n")
+            arquivo.write("-" * 45 + "\n")
+            for nome, idade, cidade in pessoas:
+                arquivo.write(f"{nome:<15}{idade:<10}{cidade:<20}\n")
+        messagebox.showinfo("Sucesso", "Arquivo salvo com sucesso!")
+    except Exception as erro:
+        messagebox.showerror("Erro", f"Falha ao salvar o arquivo:\n{erro}")
+
+# Criando janela
+janela = tk.Tk()
+janela.title("Tabela de Pessoas")
+
+# Frame para exibir os dados
+frame = tk.Frame(janela)
+frame.pack(padx=10, pady=10)
+
+# Cabeçalho da tabela
+tk.Label(frame, text="Nome", width=15, borderwidth=1, relief="solid").grid(row=0, column=0)
+tk.Label(frame, text="Idade", width=10, borderwidth=1, relief="solid").grid(row=0, column=1)
+tk.Label(frame, text="Cidade", width=20, borderwidth=1, relief="solid").grid(row=0, column=2)
+
+# Inserindo os dados na tela
+for i, (nome, idade, cidade) in enumerate(pessoas, start=1):
+    tk.Label(frame, text=nome, width=15, borderwidth=1, relief="solid").grid(row=i, column=0)
+    tk.Label(frame, text=idade, width=10, borderwidth=1, relief="solid").grid(row=i, column=1)
+    tk.Label(frame, text=cidade, width=20, borderwidth=1, relief="solid").grid(row=i, column=2)
+
+# Botão para salvar arquivo
+botao = tk.Button(janela, text="Salvar arquivo", command=salvar_arquivo, width=25)
+botao.pack(pady=10)
+
+janela.mainloop()
